@@ -1,4 +1,6 @@
 import socket
+import psutil
+import json 
 
 # TCP/IP 
 # socket.AF_INET -> protocolo IPv4      
@@ -8,7 +10,7 @@ s.connect((socket.gethostname(), 5551))
 
 cmd = input("Insira o Comando: ")
 
-s.send(cmd.encode("utf-8"))
+s.send(cmd.encode("utf-8")) # conversão de texto para bytes
 
 msg = s.recv(1024)
 
