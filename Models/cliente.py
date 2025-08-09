@@ -1,35 +1,48 @@
-import socket 
-
-# TCP/IP 
-# socket.AF_INET -> protocolo IPv4      
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((socket.gethostname(), 5551))
+import socket
 
 class Cliente:
-    def __init__(self, op):
-        self.set_op(op)
+    def __init__(self, host="127.0.0.1", port=5551):
+        self.host = host
+        self.port = port
+        self.sock = None
 
-    def set_op(self, op):
-        self.__op = op
+    def conectar(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((self.host, self.port))
 
-    def get_op(self):
-        return self.__op
+    def enviar_comando(self, comando):
+        if not self.sock:
+            raise RuntimeError("Cliente não conectado")
+        self.sock.sendall(comando.encode('utf-8'))
+        
+        resposta = b""
+        self.sock.settimeout(2)
+        try:
+            while True:
+                parte = self.sock.recv(4096)
+                if not parte:
+                    break
+                resposta += parte
+        except socket.timeout:
+            pass
+        return resposta.decode('utf-8')
 
-    def __str__(self):
-        return f"Opcoes: {self.__op}"
+    def fechar(self):
+        if self.sock:
+            self.sock.close()
+            self.sock = None
 
-    def to_dict(self):
-        return{
-            "Opcoes": self.__op
-        }
+if __name__ == "__main__":
+    cliente = Cliente()
+    try:
+        cliente.conectar()
 
-class Clientes:
-    def main():
-        cmd = input("Insira o Comando: ")
+        comandos = ["QtdProcessadores", "RamLivre", "OutroComando"]  # Lista dos comandos que quer enviar
+        for cmd in comandos:
+            resposta = cliente.enviar_comando(cmd)
+            print(f"Comando: {cmd} -> Resposta: {resposta}")
 
-        s.send(cmd.encode("utf-8")) # conversão de texto para bytes
-
-        msg = s.recv(1024)
-
-        print(f"Mensagem: {msg.decode("utf-8")}")
+    except Exception as e:
+        print(f"Erro: {e}")
+    finally:
+        cliente.fechar()

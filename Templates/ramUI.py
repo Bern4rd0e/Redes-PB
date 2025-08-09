@@ -1,24 +1,25 @@
 import streamlit as st
 import socket
+import psutil
 
-class Qtd_proceUI:
+class RamUI:
     @staticmethod
     def main():
-        st.header("Quantidade de processadores")
+        st.header("Memória RAM livre")
 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(("127.0.0.1", 5551))
-            s.send("QtdProcessadores".encode('utf-8'))
+            s.send("RamLivre".encode('utf-8'))
 
             resposta = s.recv(1024)
             s.close()
 
-            qtd = resposta.decode('utf-8')
-            st.write(f"Quantidade de processadores do servidor: {qtd}")
-            return {"quantidade_processadores": int(qtd)}
+            memoria = psutil.virtual_memory()
+            ram_livre_gb = memoria.available / (1024**3)
+            return f"{ram_livre_gb:.2f}"
         except Exception as e:
             st.error(f"Erro: {e}")
 
 if __name__ == "__main__":
-    Qtd_proceUI.main()
+    RamUI.main()
